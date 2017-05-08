@@ -126,6 +126,7 @@ public class CacheOptional<C, V> {
     }
 
     //TODO: flatmap
+    //TODO: flatMap of java utils optional
 
     public CacheOptional<V, V> cache() {
 

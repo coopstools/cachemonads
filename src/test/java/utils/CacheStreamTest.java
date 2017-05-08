@@ -68,4 +68,38 @@ public class CacheStreamTest {
 
         assertEquals(0, outputs.size());
     }
+
+    @Test
+    public void testFilterForPresent() {
+
+        List<String> outputs = new ArrayList<>();
+        stream.filter(s -> !"b".equals(s)).forEach(outputs::add);
+
+        assertEquals(2, outputs.size());
+    }
+
+    @Test
+    public void testMapOnPresent() {
+
+        List<Integer> outputs = new ArrayList<>();
+        stream.map(String::length).forEach(outputs::add);
+
+        assertEquals(Arrays.asList(1, 1, 1), outputs);
+    }
+
+    @Test
+    public void testFlatMap() {
+
+        CacheStream<String, String> subStream =
+                CacheStream.of(Collections.singletonList("a"));
+        long numberOfElements = subStream.flatMap(v -> stream).count();
+
+        assertEquals(3L, numberOfElements);
+    }
+
+    @Test
+    public void testCountOnPresent() {
+
+        assertEquals(3L, stream.count());
+    }
 }
