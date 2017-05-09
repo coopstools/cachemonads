@@ -5,8 +5,11 @@
 package com.coopstools.cachemonads;
 
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -42,6 +45,11 @@ public class CacheStream<CACHE, VALUE> {
         innerStream.forEach(pair -> consumer.accept(pair.getRight()));
     }
 
+    public void forEachOrdered(final Consumer<VALUE> consumer) {
+
+        innerStream.forEachOrdered(pair -> consumer.accept(pair.getRight()));
+    }
+
     public CacheStream<CACHE, VALUE> filter(final Predicate<VALUE> predicate) {
 
         Stream<CacheTuple<CACHE, VALUE>> filteredStream =
@@ -72,18 +80,60 @@ public class CacheStream<CACHE, VALUE> {
         return new CacheStream<>(distinctStream);
     }
 
+    public CacheStream<CACHE, VALUE> sorted() {
+
+        Stream<CacheTuple<CACHE, VALUE>> sortedStream =
+                innerStream.sorted();
+        return new CacheStream<>(sortedStream);
+    }
+
+    public CacheStream<CACHE, VALUE> sorted(final Comparator<VALUE> comparator) {
+
+        Stream<CacheTuple<CACHE, VALUE>> sortedStream =
+                innerStream.sorted((t1, t2) -> comparator.compare(t1.getRight(), t2.getRight()));
+        return new CacheStream<>(sortedStream);
+    }
+
+    public CacheStream<CACHE, VALUE> peek(final Consumer<VALUE> consumer) {
+
+        Stream<CacheTuple<CACHE, VALUE>> peekedStrem =
+                innerStream.peek(pair -> consumer.accept(pair.getRight()));
+        return new CacheStream<>(peekedStrem);
+    }
+
+    public CacheStream<CACHE, VALUE> limit(final long limit) {
+
+        Stream<CacheTuple<CACHE, VALUE>> limitedStream =
+                innerStream.limit(limit);
+        return new CacheStream<>(limitedStream);
+    }
+
+    public CacheStream<CACHE, VALUE> skip(final long skip) {
+
+        Stream<CacheTuple<CACHE, VALUE>> limitedStream =
+                innerStream.skip(skip);
+        return new CacheStream<>(limitedStream);
+    }
+
     public long count() {
+
         return innerStream.count();
     }
 
-    //TODO: sorted
-    //TODO: sorted( with comparator )
-    //TODO: peek
-    //TODO: limit
-    //TODO: skip
-    //TODO: forEach
-    //TODO: forEachOrdered
-    //TODO: toArray (object[] and V[] returns)
+    public Object[] toArray() {
+
+        Stream<VALUE> mappedStream =
+                innerStream.map(CacheTuple::getRight);
+        return mappedStream.toArray();
+    }
+
+    public VALUE[] toArray(final IntFunction<VALUE[]> generator) {
+
+        Stream<VALUE> mappedStream =
+                innerStream.map(CacheTuple::getRight);
+        return mappedStream.toArray(generator);
+    }
+
     //TODO: reduce (x3)
     //TODO: min
     //TODO: max

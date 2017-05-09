@@ -6,7 +6,7 @@ package com.coopstools.cachemonads;
 
 import java.util.Objects;
 
-class CacheTuple<LEFT_CACHE, RIGHT_VALUE> {
+class CacheTuple<LEFT_CACHE, RIGHT_VALUE> implements Comparable<CacheTuple<LEFT_CACHE, RIGHT_VALUE>> {
 
     private final LEFT_CACHE left;
     private final RIGHT_VALUE right;
@@ -23,6 +23,15 @@ class CacheTuple<LEFT_CACHE, RIGHT_VALUE> {
 
     public RIGHT_VALUE getRight() {
         return right;
+    }
+
+    @Override
+    public int compareTo(CacheTuple<LEFT_CACHE, RIGHT_VALUE> obj) {
+
+        if (!(right instanceof Comparable))
+            throw new ClassCastException("Class does not implement comparable: " + right.getClass());
+
+        return ((Comparable<RIGHT_VALUE>) right).compareTo(obj.right);
     }
 
     @Override
