@@ -2,7 +2,7 @@
  * Copyright (C) 2016 by Amobee Inc.
  * All Rights Reserved.
  */
-package com.coopsutils.cachemonads;
+package com.coopstools.cachemonads;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;

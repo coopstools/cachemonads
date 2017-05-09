@@ -2,7 +2,7 @@
  * Copyright (C) 2016 by Amobee Inc.
  * All Rights Reserved.
  */
-package utils;
+package com.coopstools.cachemonads;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -15,7 +15,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.coopsutils.cachemonads.CacheStream;
 
 public class CacheStreamTest {
 
@@ -101,5 +100,20 @@ public class CacheStreamTest {
     public void testCountOnPresent() {
 
         assertEquals(3L, stream.count());
+    }
+
+    @Test
+    public void testDistinct() {
+
+        CacheStream<String, String> duplicateStream =
+                CacheStream.of(Arrays.asList("a", "b", "a", "c", "c", "c"));
+
+        assertEquals(6, duplicateStream.count());
+
+        CacheStream<String, String> distinctStream =
+                CacheStream.of(Arrays.asList("a", "b", "a", "c", "c", "c"))
+                .distinct();
+
+        assertEquals(3, distinctStream.count());
     }
 }

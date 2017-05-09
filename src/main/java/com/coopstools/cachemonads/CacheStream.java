@@ -2,7 +2,7 @@
  * Copyright (C) 2016 by Amobee Inc.
  * All Rights Reserved.
  */
-package com.coopsutils.cachemonads;
+package com.coopstools.cachemonads;
 
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -65,11 +65,17 @@ public class CacheStream<CACHE, VALUE> {
         return new CacheStream<>(mappedStream);
     }
 
+    public CacheStream<CACHE, VALUE> distinct() {
+
+        Stream<CacheTuple<CACHE, VALUE>> distinctStream =
+                innerStream.distinct();
+        return new CacheStream<>(distinctStream);
+    }
+
     public long count() {
         return innerStream.count();
     }
 
-    //TODO: distinct
     //TODO: sorted
     //TODO: sorted( with comparator )
     //TODO: peek

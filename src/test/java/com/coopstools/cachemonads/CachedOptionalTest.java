@@ -2,7 +2,7 @@
  * Copyright (C) 2016 by Amobee Inc.
  * All Rights Reserved.
  */
-package utils;
+package com.coopstools.cachemonads;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -10,8 +10,6 @@ import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.coopsutils.cachemonads.CacheOptional;
 
 public class CachedOptionalTest {
 
@@ -80,12 +78,12 @@ public class CachedOptionalTest {
     @Test
     public void testGetOneEmprty() {
 
-       try {
-           CacheOptional.empty().get();
-           Assert.fail("NoSuchElementException not thrown");
-       } catch (NoSuchElementException nseEx) {
-           System.out.println("success");
-       }
+        try {
+            CacheOptional.empty().get();
+            Assert.fail("NoSuchElementException not thrown");
+        } catch (NoSuchElementException nseEx) {
+            System.out.println("success");
+        }
     }
 
     @Test
@@ -299,7 +297,8 @@ public class CachedOptionalTest {
             maybeValue.orElseThrow(() -> new RuntimeException(""));
             System.out.println("success");
         } catch (RuntimeException rtEx) {
-            Assert.fail("Error should not have been thrown");;
+            Assert.fail("Error should not have been thrown");
+            ;
         }
     }
 
@@ -313,7 +312,8 @@ public class CachedOptionalTest {
             String returnedValue = maybeValue.orElseThrow(() -> new RuntimeException(""));
             Assert.assertEquals(value, returnedValue);
         } catch (RuntimeException rtEx) {
-            Assert.fail("Error should not have been thrown");;
+            Assert.fail("Error should not have been thrown");
+            ;
         }
     }
 
@@ -419,8 +419,8 @@ public class CachedOptionalTest {
         CacheOptional.of(presentValue)
                 .map(s -> (String) null)
                 .ifPresentOrElse(
-                testContainer::setValue,
-                () -> testContainer.setValue(absentValue));
+                        testContainer::setValue,
+                        () -> testContainer.setValue(absentValue));
 
         Assert.assertEquals(absentValue, testContainer.getValue());
     }
