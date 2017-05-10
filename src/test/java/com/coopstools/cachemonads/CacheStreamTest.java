@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -239,5 +240,59 @@ public class CacheStreamTest {
         String[] objs = consumableStream.toArray(String[]::new);
 
         assertEquals("d", objs[0]);
+    }
+
+    @Test
+    public void testSingleReduceMethod() {
+
+        CacheStream<String, String> consumableStream =
+                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+
+        Optional<String> result = consumableStream.reduce(String::concat);
+
+        assertEquals("dabfc", result.get());
+    }
+
+    @Test
+    public void testDoubleReduceMethod() {
+
+        CacheStream<String, String> consumableStream =
+                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+
+        String result = consumableStream.reduce("r=", String::concat);
+
+        assertEquals("r=dabfc", result);
+    }
+
+    @Test
+    public void testTripleReduceMethod() {
+
+        CacheStream<String, String> consumableStream =
+                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+
+        Integer result = consumableStream
+                .reduce(
+                        0,
+                        (r, v) -> r + v.length(),
+                        Integer::sum);
+
+        assertEquals(5, result.intValue());
+    }
+
+    @Test
+    public void testCacheAndLoad() {
+
+        CacheStream<String, String> consumableStream =
+                CacheStream.of(Arrays.asList("dumb", "bells", "ring", "are", "ya", "listen'n"));
+
+        String max = consumableStream
+                .cache()
+                .map(String::length)
+                .filter(lenght -> lenght > 4)
+                .sorted()
+                .load()
+                .toArray(String[]::new)[0];
+
+        assertEquals("bells", max);
     }
 }

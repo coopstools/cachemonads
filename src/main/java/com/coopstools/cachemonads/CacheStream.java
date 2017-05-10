@@ -6,7 +6,9 @@ package com.coopstools.cachemonads;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -38,6 +40,20 @@ public class CacheStream<CACHE, VALUE> {
 
     private CacheStream(Stream<CacheTuple<CACHE, VALUE>> innerStream) {
         this.innerStream = innerStream;
+    }
+
+    public CacheStream<VALUE, VALUE> cache() {
+
+        Stream<CacheTuple<VALUE, VALUE>> cachedStream =
+                innerStream.map(pair -> new CacheTuple<>(pair.getRight(), pair.getRight()));
+        return new CacheStream<>(cachedStream);
+    }
+
+    public CacheStream<CACHE, CACHE> load() {
+
+        Stream<CacheTuple<CACHE, CACHE>> cachedStream =
+                innerStream.map(pair -> new CacheTuple<>(pair.getLeft(), pair.getLeft()));
+        return new CacheStream<>(cachedStream);
     }
 
     public void forEach(final Consumer<VALUE> consumer) {
@@ -134,7 +150,30 @@ public class CacheStream<CACHE, VALUE> {
         return mappedStream.toArray(generator);
     }
 
-    //TODO: reduce (x3)
+    public Optional<VALUE> reduce(final BinaryOperator<VALUE> accumulater) {
+
+        Stream<VALUE> mappedStream =
+                innerStream.map(CacheTuple::getRight);
+        return mappedStream.reduce(accumulater);
+    }
+
+    public VALUE reduce(final VALUE identity, final BinaryOperator<VALUE> accumulater) {
+
+        Stream<VALUE> mappedStream =
+                innerStream.map(CacheTuple::getRight);
+        return mappedStream.reduce(identity, accumulater);
+    }
+
+    public <U> U reduce(
+            final U identity,
+            final BiFunction<U, VALUE, U> accumulater,
+            final BinaryOperator<U> combiner) {
+
+        Stream<VALUE> mappedStream =
+                innerStream.map(CacheTuple::getRight);
+        return mappedStream.reduce(identity, accumulater, combiner);
+    }
+
     //TODO: min
     //TODO: max
     //TODO: anyMatch
@@ -142,11 +181,7 @@ public class CacheStream<CACHE, VALUE> {
     //TODO: noneMatch
     //TODO: findFirst
     //TODO: findAny
-    //TODO: iterate
-    //TODO: generate
     //TODO: concat
-
-    //TODO: Builder (with interface)
 
     //TODO: collect (x2)
     //TODO: mapToInt, Long, Double
@@ -155,4 +190,9 @@ public class CacheStream<CACHE, VALUE> {
     //TODO: FilterNull()
     //TODO: empty()
     //TODO: FlatMap of java util stream
+
+    //static methods
+    //TODO: generate (could take two arguments; one for generating CACHE, and the other forbuilding teh value from the CACHE)
+    //TODO: iterate
+    //TODO: Builder (with interface)
 }
