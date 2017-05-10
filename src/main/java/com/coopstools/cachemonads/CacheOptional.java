@@ -2,7 +2,7 @@
  * Copyright (C) 2016 by Amobee Inc.
  * All Rights Reserved.
  */
-package com.coopsutils.cachemonads;
+package com.coopstools.cachemonads;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -126,6 +126,7 @@ public class CacheOptional<C, V> {
     }
 
     //TODO: flatmap
+    //TODO: flatMap of java utils optional
 
     public CacheOptional<V, V> cache() {
 
