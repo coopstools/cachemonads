@@ -1,7 +1,3 @@
-/*
- * Copyright (C) 2016 by Amobee Inc.
- * All Rights Reserved.
- */
 package com.coopstools.cachemonads;
 
 import static org.junit.Assert.assertEquals;
@@ -280,6 +276,19 @@ public class CacheStreamTest {
     }
 
     @Test
+    public void testFindFirst() {
+
+        CacheStream<String, String> consumableStream =
+                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+
+        Optional<String> maybeFirstValue = consumableStream
+                .sorted()
+                .findFirst();
+
+        assertEquals("a", maybeFirstValue.get());
+    }
+
+    @Test
     public void testCacheAndLoad() {
 
         CacheStream<String, String> consumableStream =
@@ -294,5 +303,20 @@ public class CacheStreamTest {
                 .toArray(String[]::new)[0];
 
         assertEquals("bells", max);
+    }
+
+    @Test
+    public void messingAroundWithCacheLoad() {
+
+        String smallWord = CacheStream.of(
+                Arrays.asList("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job"))
+                .cache() //creates a reference to the Strings in the cache buffer
+                .map(String::length) //maps the Strings in the available value, but does not affect the cache
+                .filter(length -> length >= 3)
+                .sorted()
+                .load() //Loads the reference from cache back into the available value
+                .findFirst()
+                .get();
+        assertEquals("get", smallWord);
     }
 }
