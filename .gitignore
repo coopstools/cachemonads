@@ -2,6 +2,7 @@
 
 .gradle
 build/
+mavenBuild/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

@@ -8,9 +8,10 @@
  */
 
 apply plugin: 'java'
+apply plugin: 'maven'
 
 group = 'com.coopstools'
-version = '0.1.0-preAlpha'
+version = '0.1.0'
 archivesBaseName = 'cachemonads'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -30,4 +31,36 @@ dependencies {
     // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
     // 'test.useTestNG()' to your build script.
     testCompile 'junit:junit:4.12'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+task pom {
+    doLast {
+        pom {
+            project {
+                inceptionYear '2008'
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+            }
+        }.writeTo("$buildDir/libs/${archivesBaseName}-${version}.pom")
+    }
 }

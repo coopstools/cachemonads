@@ -222,7 +222,7 @@ public class CacheStream<CACHE, VALUE> {
      * @param mapper A non-interfering, statelss function to apply to each accessable value
      * @param <RV> The type of the right value returned in the mapper
      * @param <RC> The type of the left, or cached, value returned in the mapper
-     * @return
+     * @return the new cache stream
      */
     public <RC, RV> CacheStream<RC, RV> flatMap(final Function<VALUE, CacheStream<RC, RV>> mapper) {
 
@@ -240,7 +240,7 @@ public class CacheStream<CACHE, VALUE> {
      * assurance as to which cache/accessable pair will be kept.
      *
      *
-     * @return
+     * @return return stream of distinct values
      */
     public CacheStream<CACHE, VALUE> distinct() {
 
