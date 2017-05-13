@@ -52,6 +52,22 @@ task pom {
     doLast {
         pom {
             project {
+                name "com.coopstools:cachemonads"
+                description "An extension of the java utils Stream and Optional, adding inline value storage and retrieval"
+                url "https://github.com/coopstools/cachemonads"
+                developers {
+                    developer {
+                        name "James R Cooper"
+                        email "James@coopstools.com"
+                        organization "coopstools"
+                        organizationUrl "https://github.com/coopstools/"
+                    }
+                }
+                scm {
+                    connection "scm:git:git://github.com/coopstools/cachemonads.git"
+                    developerConnection "scm:git:ssh://github.com:coopstools/cachemonads.git"
+                    url "https://github.com/coopstools/cachemonads/tree/0.1.0"
+                }
                 inceptionYear '2008'
                 licenses {
                     license {
