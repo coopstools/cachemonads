@@ -47,7 +47,7 @@ Output:
 
 The signiture of the classes contain two generics. The first generic denotes the class of the value held in cache. The second generic denotes the class of the available value upon which mapping/sorting/filtering/etc methods can be acted.
 
-#Full Example
+# Full Example
 (This example is borrowed from https://stackoverflow.com/questions/32132387/getting-only-required-objects-from-a-list-using-java-8-streams)
 
 There exists a class, Parent, that has a name and a List of children:
