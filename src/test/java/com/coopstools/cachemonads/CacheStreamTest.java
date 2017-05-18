@@ -10,9 +10,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
+
+import com.coopstools.Parent;
+import com.coopstools.Child;
 
 public class CacheStreamTest {
 
@@ -84,7 +88,7 @@ public class CacheStreamTest {
         assertEquals(Arrays.asList(1, 1, 1), outputs);
     }
 
-    @Test
+    /*@Test
     public void testFlatMap() {
 
         CacheStream<String, String> subStream =
@@ -92,6 +96,29 @@ public class CacheStreamTest {
         long numberOfElements = subStream.flatMap(v -> stream).count();
 
         assertEquals(3L, numberOfElements);
+    }*/
+
+    @Test
+    public void testFlatMapFromStream() {
+
+        Parent parent1 = new Parent("parent1");
+        parent1.setChildren(Arrays.asList(new Child(4), new Child(11)));
+        Parent parent2 = new Parent("parent2");
+        parent2.setChildren(Arrays.asList(new Child(3), new Child(6)));
+        Parent parent3 = new Parent("parent3");
+        parent3.setChildren(Arrays.asList(new Child(12), new Child(16)));
+
+        Parent[] parents = CacheStream.of(Arrays.asList(parent1, parent2, parent3))
+                .cache()
+                .map(Parent::getChildren)
+                .flatMap(Collection::stream)
+                .map(Child::getAttribute1)
+                .filter(att -> att > 10)
+                .load()
+                .distinct()
+                .toArray(Parent[]::new);
+
+        assertEquals(2, Arrays.asList(parents).size());
     }
 
     @Test
@@ -318,5 +345,25 @@ public class CacheStreamTest {
                 .findFirst()
                 .get();
         assertEquals("get", smallWord);
+    }
+
+    @Test
+    public void testToStream() {
+
+        Stream<String> streamingMusic = CacheStream.of(
+                Arrays.asList("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job"))
+                .toStream();
+
+        assertEquals(11, streamingMusic.count());
+    }
+
+    @Test
+    public void testCollect() {
+
+        List<String> playList = CacheStream.of(
+                Arrays.asList("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job"))
+                .collect(Collectors.toList());
+
+        assertEquals("code", playList.get(0));
     }
 }
