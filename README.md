@@ -24,7 +24,7 @@ public CacheStream<VALUE, VALUE> cache();
 public CacheStream<CACHE, CACHE> load();
 ```
 
-The cache() method takes the available value, and saves a reference to it in the cache. Any further mapping/filtering/etc operations performed on the value will no affect the CACHE. The load() method overwrites the available value with the one saved in cache.
+The cache() method takes the available value, and saves a reference to it in the cache. Any further mapping/filtering/etc operations performed on the value will have no affect on the saved/cached value. The load() method overwrites the available value with the one saved in cache.
 
 ```
         CacheStream<String, String> consumableStream =
@@ -45,4 +45,57 @@ Output:
         bells
 ```
 
-The signiture of the classes contain two generics. The first generic denotes the class of the value held in cache. The second generic denotes the class of the available value upon which can be acted.
+The signiture of the classes contain two generics. The first generic denotes the class of the value held in cache. The second generic denotes the class of the available value upon which mapping/sorting/filtering/etc methods can be acted.
+
+#Full Example
+(This example is borrowed from https://stackoverflow.com/questions/32132387/getting-only-required-objects-from-a-list-using-java-8-streams)
+
+There exists a class, Parent, that has a name and a List of children:
+
+```
+public class Parent {
+
+    private final String name;
+    private List<Child> children;
+
+    public Parent(String name) {
+        this.name = name;
+    }
+    
+    ...
+    //Getters, setters, equals(), and hashCode()
+    ...
+}
+```
+
+The class child is defined by a single integer attribute, attribute1:
+```
+public class Child {
+
+    private final Integer attribute1;
+
+    public Child(Integer attribute1) {
+        this.attribute1 = attribute1;
+    }
+
+    public Integer getAttribute1() {
+        return attribute1;
+    }
+}
+```
+
+Given a group of Parents, each with some number of children, we want to find which parents have a child with an attribute greater than 10. This can be found using the following method:
+
+```
+        List<Parent> goodParents = CacheStream.of(Arrays.asList(parent1, parent2, parent3))
+                .cache() //A reference to parent is saved in cache
+                .map(Parent::getChildren) //The visible value is mapped Parent -> Child; but the cached reference to parents is preserved
+                .flatMap(Collection::stream)
+                .map(Child::getAttribute1)
+                .filter(att -> att > 10)
+                .load() //The parents are pulled out of cache, and overide the visible value
+                .distinct()
+                .collect(Collectors.toList());
+```
+
+The list, goodParents, now only contains parents with at least one child who has an attribute above 10.
