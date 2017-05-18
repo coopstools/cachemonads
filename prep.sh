@@ -16,3 +16,6 @@ do
   echo "Processing $f file..."
   gpg2 -ab ${f}
 done
+
+# doesn't work right now. Need to get better at bash
+# jar -cvf ./mavenBuild/bundle.jar
