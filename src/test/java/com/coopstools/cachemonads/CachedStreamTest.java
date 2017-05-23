@@ -18,18 +18,19 @@ import org.junit.Test;
 import com.coopstools.Parent;
 import com.coopstools.Child;
 
-public class CacheStreamTest {
+public class CachedStreamTest {
 
-    private final CacheStream<String, String> stream =
-            CacheStream.of(Arrays.asList("a", "b", "c"));
-    private final CacheStream<String, String> emptyStream =
-            CacheStream.of(Collections.emptyList());
+    private final CachedStream<String, String> stream =
+            CachingStream.of(Arrays.asList("a", "b", "c")).cache();
+    private final List<String> emptyStrings = Collections.emptyList();
+    private final CachedStream<String, String> emptyStream =
+            CachingStream.of(emptyStrings).cache();
 
     @Test
     public void testStreamCollectionCreation() {
 
         Collection<String> collection = Arrays.asList("a", "b", "c");
-        CacheStream<String, String> stream = CacheStream.of(collection);
+        CachedStream<String, String> stream = CachingStream.of(collection).cache();
 
         assertNotNull(stream);
     }
@@ -38,7 +39,7 @@ public class CacheStreamTest {
     public void testParrallelStreamCreation() {
 
         Collection<String> collection = Arrays.asList("a", "b", "c");
-        CacheStream<String, String> stream = CacheStream.parrallelOf(collection);
+        CachedStream<String, String> stream = CachingStream.parallelOf(collection).cache();
 
         assertNotNull(stream);
     }
@@ -47,7 +48,7 @@ public class CacheStreamTest {
     public void testStreamStreamCreation() {
 
         Collection<String> collection = Arrays.asList("a", "b", "c");
-        CacheStream<String, String> stream = CacheStream.of(collection.stream());
+        CachedStream<String, String> stream = CachingStream.of(collection.stream()).cache();
 
         assertNotNull(stream);
     }
@@ -108,13 +109,14 @@ public class CacheStreamTest {
         Parent parent3 = new Parent("parent3");
         parent3.setChildren(Arrays.asList(new Child(12), new Child(16)));
 
-        Parent[] parents = CacheStream.of(Arrays.asList(parent1, parent2, parent3))
+        Parent[] parents = CachingStream.of(Arrays.asList(parent1, parent2, parent3))
                 .cache()
                 .map(Parent::getChildren)
                 .flatMap(Collection::stream)
                 .map(Child::getAttribute1)
                 .filter(att -> att > 10)
                 .load()
+                .toStream()
                 .distinct()
                 .toArray(Parent[]::new);
 
@@ -130,13 +132,13 @@ public class CacheStreamTest {
     @Test
     public void testDistinct() {
 
-        CacheStream<String, String> duplicateStream =
-                CacheStream.of(Arrays.asList("a", "b", "a", "c", "c", "c"));
+        CachedStream<String, String> duplicateStream =
+                CachingStream.of(Arrays.asList("a", "b", "a", "c", "c", "c")).cache();
 
         assertEquals(6, duplicateStream.count());
 
-        CacheStream<String, String> distinctStream =
-                CacheStream.of(Arrays.asList("a", "b", "a", "c", "c", "c"))
+        CachedStream<String, String> distinctStream =
+                CachingStream.of(Arrays.asList("a", "b", "a", "c", "c", "c")).cache()
                         .distinct();
 
         assertEquals(3, distinctStream.count());
@@ -149,8 +151,8 @@ public class CacheStreamTest {
                 new UnsortedTestClass(3, "green"),
                 new UnsortedTestClass(2, "house"));
 
-        CacheStream<UnsortedTestClass, UnsortedTestClass> unsortable =
-                CacheStream.of(unsortableStream);
+        CachedStream<UnsortedTestClass, UnsortedTestClass> unsortable =
+                CachingStream.of(unsortableStream).cache();
 
         try {
             unsortable.sorted().map(UnsortedTestClass::getStringValue).forEach(System.out::println);
@@ -163,8 +165,8 @@ public class CacheStreamTest {
     @Test
     public void testSortedOnSortable() {
 
-        CacheStream<String, String> duplicateStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> duplicateStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache().sorted();
 
         List<String> resultList = new ArrayList<>(5);
 
@@ -187,7 +189,8 @@ public class CacheStreamTest {
 
         List<Integer> resultList = new ArrayList<>(2);
 
-        CacheStream.of(unsortableStream)
+        CachingStream.of(unsortableStream)
+                .cache()
                 .sorted((v1, v2) -> v1.getStringValue().compareTo(v2.getStringValue()))
                 .map(UnsortedTestClass::getIntValue)
                 .forEach(resultList::add);
@@ -198,8 +201,8 @@ public class CacheStreamTest {
     @Test
     public void testPeek() {
 
-        CacheStream<String, String> peekableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> peekableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         List<String> resultList = new ArrayList<>(5);
         assertEquals(0, resultList.size());
@@ -213,8 +216,8 @@ public class CacheStreamTest {
     public void testLimit() {
 
         long value = 3L;
-        CacheStream<String, String> countableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"))
+        CachedStream<String, String> countableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache()
                         .limit(value);
 
         assertEquals(value, countableStream.count());
@@ -224,8 +227,8 @@ public class CacheStreamTest {
     public void testSkip() {
 
         long value = 3L;
-        CacheStream<String, String> countableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"))
+        CachedStream<String, String> countableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache()
                         .skip(value);
 
         assertEquals(5L - value, countableStream.count());
@@ -234,8 +237,8 @@ public class CacheStreamTest {
     @Test
     public void testForEachOrdered() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         List<String> resultList = new ArrayList<>(5);
 
@@ -246,8 +249,8 @@ public class CacheStreamTest {
     @Test
     public void testToObjectArray() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         Object[] objs = consumableStream.toArray();
 
@@ -257,8 +260,8 @@ public class CacheStreamTest {
     @Test
     public void testToVALUEArray() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         String[] objs = consumableStream.toArray(String[]::new);
 
@@ -268,8 +271,8 @@ public class CacheStreamTest {
     @Test
     public void testSingleReduceMethod() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         Optional<String> result = consumableStream.reduce(String::concat);
 
@@ -279,8 +282,8 @@ public class CacheStreamTest {
     @Test
     public void testDoubleReduceMethod() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         String result = consumableStream.reduce("r=", String::concat);
 
@@ -290,8 +293,8 @@ public class CacheStreamTest {
     @Test
     public void testTripleReduceMethod() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         Integer result = consumableStream
                 .reduce(
@@ -305,8 +308,8 @@ public class CacheStreamTest {
     @Test
     public void testFindFirst() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("d", "a", "b", "f", "c"));
+        CachedStream<String, String> consumableStream =
+                CachingStream.of(Arrays.asList("d", "a", "b", "f", "c")).cache();
 
         Optional<String> maybeFirstValue = consumableStream
                 .sorted()
@@ -318,8 +321,8 @@ public class CacheStreamTest {
     @Test
     public void testCacheAndLoad() {
 
-        CacheStream<String, String> consumableStream =
-                CacheStream.of(Arrays.asList("dumb", "bells", "ring", "are", "ya", "listen'n"));
+        CachingStream<String> consumableStream =
+                CachingStream.of("dumb", "bells", "ring", "are", "ya", "listen'n");
 
         String max = consumableStream
                 .cache()
@@ -327,6 +330,7 @@ public class CacheStreamTest {
                 .filter(lenght -> lenght > 4)
                 .sorted()
                 .load()
+                .toStream()
                 .toArray(String[]::new)[0];
 
         assertEquals("bells", max);
@@ -335,13 +339,14 @@ public class CacheStreamTest {
     @Test
     public void messingAroundWithCacheLoad() {
 
-        String smallWord = CacheStream.of(
-                Arrays.asList("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job"))
+        String smallWord = CachingStream
+                .of("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job")
                 .cache() //creates a reference to the Strings in the cache buffer
                 .map(String::length) //maps the Strings in the available value, but does not affect the cache
                 .filter(length -> length >= 3)
                 .sorted()
                 .load() //Loads the reference from cache back into the available value
+                .toStream() //At the time of the writing of this test, Caching stream don't have find first
                 .findFirst()
                 .get();
         assertEquals("get", smallWord);
@@ -350,8 +355,9 @@ public class CacheStreamTest {
     @Test
     public void testToStream() {
 
-        Stream<String> streamingMusic = CacheStream.of(
+        Stream<String> streamingMusic = CachingStream.of(
                 Arrays.asList("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job"))
+                .cache()
                 .toStream();
 
         assertEquals(11, streamingMusic.count());
@@ -360,8 +366,9 @@ public class CacheStreamTest {
     @Test
     public void testCollect() {
 
-        List<String> playList = CacheStream.of(
+        List<String> playList = CachingStream.of(
                 Arrays.asList("code", "monkey", "get", "up", "get", "coffee", "code", "monkey", "go", "to", "job"))
+                .cache()
                 .collect(Collectors.toList());
 
         assertEquals("code", playList.get(0));

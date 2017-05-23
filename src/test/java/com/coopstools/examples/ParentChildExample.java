@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.coopstools.Child;
 import com.coopstools.Parent;
-import com.coopstools.cachemonads.CacheStream;
+import com.coopstools.cachemonads.CachingStream;
 
 public class ParentChildExample {
 
@@ -25,13 +25,14 @@ public class ParentChildExample {
         Parent parent3 = new Parent("parent3");
         parent3.setChildren(Arrays.asList(new Child(12), new Child(16)));
 
-        List<Parent> parents = CacheStream.of(Arrays.asList(parent1, parent2, parent3))
+        List<Parent> parents = CachingStream.of(Arrays.asList(parent1, parent2, parent3))
                 .cache()
                 .map(Parent::getChildren)
                 .flatMap(Collection::stream)
                 .map(Child::getAttribute1)
                 .filter(att -> att > 10)
                 .load()
+                .toStream() //TODO: remove this line once distinct and collect are in CachingStream
                 .distinct()
                 .collect(Collectors.toList());
 

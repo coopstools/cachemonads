@@ -50,7 +50,7 @@ import java.util.stream.Stream;
  *                cache, this parameter will not be needed.
  * @param <VALUE> The type of the accessable value. This is the value upon which most of the methods operate.
  */
-public class CacheStream<CACHE, VALUE> {
+public class CachedStream<CACHE, VALUE> {
 
     private final Stream<CacheTuple<CACHE, VALUE>> innerStream;
 
@@ -60,78 +60,8 @@ public class CacheStream<CACHE, VALUE> {
      *
      * @param innerStream A {@code Stream} of tuples which is contained in the CacheStream
      */
-    private CacheStream(Stream<CacheTuple<CACHE, VALUE>> innerStream) {
+    CachedStream(Stream<CacheTuple<CACHE, VALUE>> innerStream) {
         this.innerStream = innerStream;
-    }
-
-    /**
-     * Returns a sequential ordered CacheStream whose elements are the specified values with a null reference,
-     * of the same type as the elements, stored in the cache.
-     *
-     * @param <V>        The type of the stream available values, and the stream cache values
-     * @param collection A collection of the elements that will make up the accessable values in the
-     *                   CacheStream
-     * @return the new CachStream
-     */
-    public static <V> CacheStream<V, V> of(final Collection<V> collection) {
-
-        return new CacheStream<>(collection.stream().map(CacheStream::makeTuple));
-    }
-
-    /**
-     * Returns a CacheStream whose elements are those from the stream with a null reference, of the same type
-     * as the elements, stored in the cache. Whether the CacheStream will operate in sequence or parrallel is
-     * dependant on the supplied stream.
-     *
-     * @param <V>    The type of the stream available values, and the stream cache values
-     * @param stream A stream of the elements that will make up the accessable values in the CacheStream
-     * @return the new CachStream
-     */
-    public static <V> CacheStream<V, V> of(final Stream<V> stream) {
-
-        return new CacheStream<>(stream.map(CacheStream::makeTuple));
-    }
-
-    /**
-     * Returns a stream, which will run in parrallel, whose elements consist of those from the supplied
-     * collection.
-     *
-     * @param <V>        The type of the stream available values, and the stream cache values
-     * @param collection A collection of the elements that will make up the accessable values in the
-     *                   CacheStream
-     * @return the new parrallel CacheStream
-     */
-    public static <V> CacheStream<V, V> parrallelOf(final Collection<V> collection) {
-
-        return new CacheStream<>(collection.parallelStream().map(CacheStream::makeTuple));
-    }
-
-    /**
-     * Returns a new tuple, whose right value will be the CacheStream's accessable value, upon which various
-     * operations can be performed. The left value is initialized as null; and will be where a reference to
-     * the accessable will be stored when the cache() method is called.
-     *
-     * @param value The value to be stored in the right side of teh tuple, and upon which most CacheStream
-     *              methods operate
-     * @param <C>   The type of the cached value. Upon initialization, this will always be the same as the type
-     *              of the accessable, right value.
-     * @param <V>   The type of the right, or accessable, value.
-     * @return A new tuple consisting of a left, cached, value, and a right, accessable, value.
-     */
-    private static <C, V> CacheTuple<C, V> makeTuple(final V value) {
-        return new CacheTuple<>((C) null, value);
-    }
-
-    /**
-     * Returns a CacheStream, where the cache values have been mapped to the associated accessable values.
-     *
-     * @return A new instance of CacheStream with a reference to the mapped inner stream
-     */
-    public CacheStream<VALUE, VALUE> cache() {
-
-        Stream<CacheTuple<VALUE, VALUE>> cachedStream =
-                innerStream.map(pair -> new CacheTuple<>(pair.getRight(), pair.getRight()));
-        return new CacheStream<>(cachedStream);
     }
 
     /**
@@ -139,11 +69,11 @@ public class CacheStream<CACHE, VALUE> {
      *
      * @return A new instance of CacheStream with a reference to the mapped inner stream
      */
-    public CacheStream<CACHE, CACHE> load() {
+    public CachingStream<CACHE> load() {
 
-        Stream<CacheTuple<CACHE, CACHE>> cachedStream =
-                innerStream.map(pair -> new CacheTuple<>(pair.getLeft(), pair.getLeft()));
-        return new CacheStream<>(cachedStream);
+        Stream<CACHE> cachedStream =
+                innerStream.map(CacheTuple::getLeft);
+        return CachingStream.of(cachedStream);
     }
 
     /**
@@ -164,7 +94,7 @@ public class CacheStream<CACHE, VALUE> {
      * stream if the stream has a defined order.
      * <p>
      * This is a terminal operation as defined in the {@code Stream} docs. This operation processes the
-     * elements one at a time, in encounter order is one exists. For further reference consult the
+     * elements one at a time, in encounter order if one exists. For further reference consult the
      * {@code Stream} docs.
      *
      * @param action A non-interfering action to perform on the accessable values of the inner stream.
@@ -186,11 +116,11 @@ public class CacheStream<CACHE, VALUE> {
      *                  if that value should remain in the stream
      * @return A post filter CacheStream
      */
-    public CacheStream<CACHE, VALUE> filter(final Predicate<VALUE> predicate) {
+    public CachedStream<CACHE, VALUE> filter(final Predicate<VALUE> predicate) {
 
         Stream<CacheTuple<CACHE, VALUE>> filteredStream =
                 innerStream.filter(pair -> predicate.test(pair.getRight()));
-        return new CacheStream<>(filteredStream);
+        return new CachedStream<>(filteredStream);
     }
 
     /**
@@ -204,13 +134,15 @@ public class CacheStream<CACHE, VALUE> {
      * @param <R>    The element type of the new accessable values
      * @return the new, mapped CacheStream
      */
-    public <R> CacheStream<CACHE, R> map(final Function<VALUE, R> mapper) {
+    public <R> CachedStream<CACHE, R> map(final Function<VALUE, R> mapper) {
 
         Stream<CacheTuple<CACHE, R>> mappedStream =
                 innerStream.map(pair ->
                         new CacheTuple<>(pair.getLeft(), mapper.apply(pair.getRight())));
-        return new CacheStream<>(mappedStream);
+        return new CachedStream<>(mappedStream);
     }
+
+    //TODO: create map that takes two arguments: Value, and Cache
 
     /**
      * Returns a stream constructed from the concatanation of the CacheStreams generated by the mapping
@@ -224,11 +156,11 @@ public class CacheStream<CACHE, VALUE> {
      * @param <RV>   The type of the right value returned in the mapper
      * @return the new cache stream
      */
-    public <RV> CacheStream<CACHE, RV> flatMap(final Function<VALUE, Stream<RV>> mapper) {
+    public <RV> CachedStream<CACHE, RV> flatMap(final Function<VALUE, Stream<RV>> mapper) {
 
         Stream<CacheTuple<CACHE, RV>> mappedStream =
                 innerStream.flatMap(pair -> this.subFlatMap(pair, mapper));
-        return new CacheStream<>(mappedStream);
+        return new CachedStream<>(mappedStream);
     }
 
     private <RV> Stream<CacheTuple<CACHE, RV>> subFlatMap(
@@ -239,6 +171,8 @@ public class CacheStream<CACHE, VALUE> {
         return rightStream.map(rightValue -> new CacheTuple<>(leftValue, rightValue));
     }
 
+    //TODO: Find way to create flatMap for taking CacheStreams
+
     /**
      * Returns a stream consisting of the distinct elements (according to {@link Object#equals(Object)}) of
      * the accessable values of the stream. During the distinct process, the cache values are ignored. The
@@ -248,49 +182,51 @@ public class CacheStream<CACHE, VALUE> {
      *
      * @return return stream of distinct values
      */
-    public CacheStream<CACHE, VALUE> distinct() {
+    public CachedStream<CACHE, VALUE> distinct() {
 
         Stream<CacheTuple<CACHE, VALUE>> distinctStream =
                 innerStream.distinct();
-        return new CacheStream<>(distinctStream);
+        return new CachedStream<>(distinctStream);
     }
 
     //TODO: Create flatmap that returns CacheStream, but takes a bi-function as an argument
     //TODO: Create flatmap that takes java.utils.Stream as a return value, instead of CacheStream
 
-    public CacheStream<CACHE, VALUE> sorted() {
+    public CachedStream<CACHE, VALUE> sorted() {
 
         Stream<CacheTuple<CACHE, VALUE>> sortedStream =
                 innerStream.sorted();
-        return new CacheStream<>(sortedStream);
+        return new CachedStream<>(sortedStream);
     }
 
-    public CacheStream<CACHE, VALUE> sorted(final Comparator<VALUE> comparator) {
+    public CachedStream<CACHE, VALUE> sorted(final Comparator<VALUE> comparator) {
 
         Stream<CacheTuple<CACHE, VALUE>> sortedStream =
                 innerStream.sorted((t1, t2) -> comparator.compare(t1.getRight(), t2.getRight()));
-        return new CacheStream<>(sortedStream);
+        return new CachedStream<>(sortedStream);
     }
 
-    public CacheStream<CACHE, VALUE> peek(final Consumer<VALUE> consumer) {
+    public CachedStream<CACHE, VALUE> peek(final Consumer<VALUE> consumer) {
 
         Stream<CacheTuple<CACHE, VALUE>> peekedStrem =
                 innerStream.peek(pair -> consumer.accept(pair.getRight()));
-        return new CacheStream<>(peekedStrem);
+        return new CachedStream<>(peekedStrem);
     }
 
-    public CacheStream<CACHE, VALUE> limit(final long limit) {
+    //TODO: Add peek method that accepts BiFunction
+
+    public CachedStream<CACHE, VALUE> limit(final long limit) {
 
         Stream<CacheTuple<CACHE, VALUE>> limitedStream =
                 innerStream.limit(limit);
-        return new CacheStream<>(limitedStream);
+        return new CachedStream<>(limitedStream);
     }
 
-    public CacheStream<CACHE, VALUE> skip(final long skip) {
+    public CachedStream<CACHE, VALUE> skip(final long skip) {
 
         Stream<CacheTuple<CACHE, VALUE>> limitedStream =
                 innerStream.skip(skip);
-        return new CacheStream<>(limitedStream);
+        return new CachedStream<>(limitedStream);
     }
 
     public long count() {
@@ -359,6 +295,8 @@ public class CacheStream<CACHE, VALUE> {
     //TODO: noneMatch
     //TODO: findAny
     //TODO: concat
+
+    //TODO: drop() - drops the cached value and returns a CachingStream
 
     //TODO: collect (the other kind)
     //TODO: mapToInt, Long, Double
